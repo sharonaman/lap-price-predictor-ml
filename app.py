@@ -4,7 +4,14 @@ import numpy as np
 import pickle
 import base64
 
-# Function to set the background image
+# Load the trained model
+with open('pipe.pkl', 'rb') as file:
+    rf = pickle.load(file)
+
+# Load the dataset
+data = pd.read_csv("traineddata.csv")
+
+# Function to set background image and custom styling
 def set_background(image_file):
     with open(image_file, "rb") as file:
         encoded_string = base64.b64encode(file.read()).decode()
@@ -18,120 +25,127 @@ def set_background(image_file):
                 background-attachment: fixed;
                 font-family: 'Arial', sans-serif;
             }}
-            h1, h2 {{
+            .stTitle {{
                 color: white;
                 text-align: center;
-                margin-bottom: 10px;
+                font-size: 2.5rem;
+                margin-bottom: 20px;
             }}
             .stButton>button {{
-                background-color: black;
+                background-color: #4CAF50;
                 color: white;
                 font-size: 1.2rem;
                 font-weight: bold;
-                border-radius: 5px;
-                padding: 10px 20px;
+                border-radius: 10px;
+                padding: 15px 40px;
+                border: none;
                 cursor: pointer;
             }}
             .stButton>button:hover {{
-                background-color: #555;
-                color: #fff;
+                background-color: #45a049;
             }}
             .predicted-price-box {{
-                background-color: rgba(0, 0, 0, 0.8);
-                padding: 20px;
-                border-radius: 10px;
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 30px;
+                border-radius: 15px;
                 text-align: center;
                 color: white;
-                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+                margin-top: 20px;
             }}
             .predicted-price-box h2 {{
-                color: #00ff00;
-                font-size: 1.8rem;
+                font-size: 2rem;
+                color: #4CAF50;
             }}
             </style>
-            """,
-            unsafe_allow_html=True
+            """, unsafe_allow_html=True
         )
 
-# Set background
+# Set background image
 set_background("laptop_image.jpg")
 
-# Load the model
-file1 = open('pipe.pkl', 'rb')
-rf = pickle.load(file1)
-file1.close()
+# Streamlit App Title
+st.markdown("<h1 class='stTitle'>💻 Laptop Price Predictor</h1>", unsafe_allow_html=True)
 
-# Load dataset
-data = pd.read_csv("traineddata.csv")
+# Single-column layout for inputs
+st.subheader("Select Laptop Specifications")
 
-# App title
-st.markdown("<h1>Laptop Price Predictor</h1>", unsafe_allow_html=True)
-st.markdown("<br>", unsafe_allow_html=True)
+# Collect user inputs with validation
+company = st.selectbox('Select Laptop Brand', data['Company'].unique())
+type = st.selectbox('Select Laptop Type', data['TypeName'].unique())
+ram = st.selectbox('Select RAM Size (in GB)', [2, 4, 6, 8, 12, 16, 24, 32, 64])
+os = st.selectbox('Select Operating System', data['OpSys'].unique())
+touchscreen = st.selectbox('Touchscreen Available?', ['No', 'Yes'])
+cpu = st.selectbox('Select Processor', data['CPU_name'].unique())
+weight = st.number_input('Enter Laptop Weight (in kg)', format="%.2f")
+ips = st.selectbox('IPS Display?', ['No', 'Yes'])
+screen_size = st.number_input('Enter Screen Size (in inches)', format="%.2f")
+resolution = st.selectbox('Select Screen Resolution', [
+    '1920x1080', '1366x768', '1600x900', '3840x2160', '3200x1800',
+    '2880x1800', '2560x1600', '2560x1440', '2304x1440'])
+hdd = st.selectbox('Select HDD Size (in GB)', [0, 128, 256, 512, 1024, 2048])
+ssd = st.selectbox('Select SSD Size (in GB)', [0, 8, 128, 256, 512, 1024])
+gpu = st.selectbox('Select GPU Brand', data['Gpu brand'].unique())
 
-# Collapsible section: Laptop Specifications
-with st.expander("💻 Laptop Specifications", expanded=True):
-    st.markdown("<br>", unsafe_allow_html=True)
-    # Row 1 for Laptop Specifications
-    row1_col1, row1_col2 = st.columns(2)
-    with row1_col1:
-        company = st.selectbox('Select Brand', data['Company'].unique(), help="Choose the laptop's brand.")
-        ram = st.selectbox('RAM (in GB)', [2, 4, 6, 8, 12, 16, 24, 32, 64], help="Select the RAM size.")
-    with row1_col2:
-        weight = st.number_input('Laptop Weight (in kg)', format="%.2f", help="Enter the weight of the laptop.")
-        os = st.selectbox('Operating System', data['OpSys'].unique(), help="Select the operating system.")
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Row 2 for Laptop Specifications
-    row2_col1, row2_col2 = st.columns(2)
-    with row2_col1:
-        type = st.selectbox('Laptop Type', data['TypeName'].unique(), help="Choose the type of laptop (e.g., Ultrabook, Gaming).")
-    with row2_col2:
-        laptop_usage = st.selectbox('Usage Type', ['Business', 'Gaming', 'Personal', 'Programming', 'Student'], help="Select the intended usage type.")
-st.markdown("<br><br>", unsafe_allow_html=True)
-
-# Collapsible section: Performance Specifications
-with st.expander("⚙️ Performance Specifications", expanded=True):
-    st.markdown("<br>", unsafe_allow_html=True)
-    # Row 1 for Performance Specifications
-    perf_row1_col1, perf_row1_col2 = st.columns(2)
-    with perf_row1_col1:
-        cpu = st.selectbox('Processor', data['CPU_name'].unique(), help="Select the CPU model.")
-        touchscreen = st.selectbox('Touchscreen', ['No', 'Yes'], help="Does the laptop have a touchscreen?")
-    with perf_row1_col2:
-        hdd = st.selectbox('HDD (in GB)', [0, 128, 256, 512, 1024, 2048], help="Select the HDD storage.")
-        ips = st.selectbox('IPS Display', ['No', 'Yes'], help="Does the laptop have an IPS display?")
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Row 2 for Performance Specifications
-    perf_row2_col1, perf_row2_col2 = st.columns(2)
-    with perf_row2_col1:
-        gpu = st.selectbox('GPU Brand', data['Gpu brand'].unique(), help="Select the GPU brand.")
-    with perf_row2_col2:
-        screen_size = st.number_input('Screen Size (in inches)', format="%.2f", key="performance_screen_size", help="Enter the screen size.")
-st.markdown("<br><br>", unsafe_allow_html=True)
-
-# Predict Button
+# Predict Button with validation
 if st.button('Predict Price', help="Click to predict the laptop price!"):
-    # Prediction logic
-    touchscreen = 1 if touchscreen == 'Yes' else 0
-    ips = 1 if ips == 'Yes' else 0
+    error = False
+    
+    # Validation for weight and screen size
+    if weight <= 0:
+        st.error("Error: Weight should be greater than 0 kg.")
+        error = True
+        
+    if screen_size <= 0:
+        st.error("Error: Screen size should be greater than 0 inches.")
+        error = True
+    
+    # Check for valid categorical selections
+    if company not in data['Company'].unique():
+        st.error("Error: Invalid laptop brand selected.")
+        error = True
+    
+    if type not in data['TypeName'].unique():
+        st.error("Error: Invalid laptop type selected.")
+        error = True
+    
+    if cpu not in data['CPU_name'].unique():
+        st.error("Error: Invalid processor selected.")
+        error = True
+    
+    if gpu not in data['Gpu brand'].unique():
+        st.error("Error: Invalid GPU brand selected.")
+        error = True
+    
+    if os not in data['OpSys'].unique():
+        st.error("Error: Invalid operating system selected.")
+        error = True
 
-    resolution = '1920x1080'  # Example default resolution
-    X_resolution = int(resolution.split('x')[0])
-    Y_resolution = int(resolution.split('x')[1])
-    ppi = ((X_resolution**2) + (Y_resolution**2))**0.5 / screen_size
+    # If no errors, make prediction
+    if not error:
+        try:
+            # Convert categorical inputs to numeric values
+            touchscreen = 1 if touchscreen == 'Yes' else 0
+            ips = 1 if ips == 'Yes' else 0
 
-    query = np.array([company, type, ram, weight, touchscreen, ips, ppi, cpu, hdd, gpu, os])
-    query = query.reshape(1, 12)
+            # Extract resolution details for PPI calculation
+            X_resolution = int(resolution.split('x')[0])
+            Y_resolution = int(resolution.split('x')[1])
+            ppi = ((X_resolution**2) + (Y_resolution**2))**0.5 / screen_size
 
-    prediction = int(np.exp(rf.predict(query)[0]))
+            # Create query array
+            query = np.array([company, type, ram, weight, touchscreen, ips, ppi, cpu, hdd, ssd, gpu, os])
+            query = query.reshape(1, -1)  # Reshape dynamically to avoid size mismatch
 
-    st.markdown(
-        f"""
-        <div class="predicted-price-box">
-            <h2>Predicted Price</h2>
-            <p>The estimated price for this laptop is between <strong>{prediction - 1000}₹</strong> and <strong>{prediction + 1000}₹</strong>.</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            # Make prediction
+            prediction = int(np.exp(rf.predict(query)[0]))
+            st.markdown(
+                f"""
+                <div class="predicted-price-box">
+                    <h2>Predicted Price</h2>
+                    <p>The estimated price for this laptop is between <strong>₹{prediction - 1000}</strong> and <strong>₹{prediction + 1000}</strong>.</p>
+                </div>
+                """, unsafe_allow_html=True
+            )
+        except Exception as e:
+            st.error(f"Error occurred during prediction: {e}")
